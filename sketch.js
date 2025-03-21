@@ -2,7 +2,7 @@
 
 import { mountFlex } from "https://cdn.jsdelivr.net/npm/p5.flex@0.1.1/src/p5.flex.min.mjs"
 import { vert, frag } from "./shader.js"
-
+//shader for live pixel manipulation
 mountFlex(p5)
 
 new p5((p) => {
@@ -47,7 +47,7 @@ new p5((p) => {
 		theShader.setUniform("tex1", capture)
 		theShader.setUniform("canvasSize", CANVAS_SIZE)
 		theShader.setUniform("texelSize", TEXEL_SIZE)
-		theShader.setUniform("mouse", [p.mouseX / WIDTH, p.mouseY / HEIGHT])
+		theShader.setUniform("mouse", [p.mouseX / WIDTH, p.mouseY / HEIGHT]) //adjust based on mouse position
 		theShader.setUniform("time", p.frameCount / 60)
 		gfx.quad(-1, 1, 1, 1, 1, -1, -1, -1)
 
