@@ -21,3 +21,6 @@ Potentially add parameters for entire subject/face focus. Add parameters for pot
 Would like to add audio manipulation (though uncertain how viable). Microphone far away from screen, audio output from screen.
 
 Person logs in, can control the camera? See a quick database of snapshots?
+
+
+update:
