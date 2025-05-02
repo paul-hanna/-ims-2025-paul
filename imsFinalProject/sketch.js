@@ -1,4 +1,6 @@
-// ─── new at top ───
+//
+//    URL PARAMETER: ?splits=[number of split screens]
+//
 const urlParams       = new URLSearchParams(window.location.search);
 const PERMITTED_SPLITS = parseInt(urlParams.get('splits')) || 1;  // how many face‐windows to show
 
@@ -36,7 +38,7 @@ function setup() {
 };
 
 function modelReady() {
-  console.log('🧠 FaceMesh loaded');
+  console.log('facemesh loaded');
   faceMesh.detectStart(video, gotResults);
 }
 
@@ -102,7 +104,7 @@ function draw() {
     }
 
   } else {
-    // ─── SINGLE‐WINDOW───
+    // singlewindow
     updateCameraTarget();
     cx   = lerp(cx,   tx, LERP_FACTOR);
     cy   = lerp(cy,   ty, LERP_FACTOR);
@@ -119,10 +121,10 @@ function draw() {
     pop();
   }
 
-  // ─── GREEN TINT ───
+
   applyGreenTint();
 
-  // ─── SCREENSHOT──
+  // screenshot
   if (detections.length && millis() - lastCaptureTime > CAPTURE_INTERVAL) {
     screenshots.push( get(0, 0, width, height) );
     lastCaptureTime = millis();
@@ -136,7 +138,7 @@ function draw() {
     }
   }
 
-  // ─── HUD + THUMBNAILS───
+  // hud and thumbs
   drawHUD();
   const thumbW = 120;
   const thumbH = thumbW * (CAP_H / CAP_W);
