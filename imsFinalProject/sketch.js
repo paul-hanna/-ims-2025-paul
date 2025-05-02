@@ -11,7 +11,7 @@ const BBOX_MARGIN = 1.4;          // 1 = exact fit, >1 = looser
 const SCAN_LINES  = 4;
 let screenshots = [];
 let lastCaptureTime = 0;
-const CAPTURE_INTERVAL = 4000; // ms
+const CAPTURE_INTERVAL = 2000; // ms
 
 let video;
 let faceMesh;
@@ -67,7 +67,7 @@ function windowResized() {
 function draw() {
   background(0);
 
-  // ─── SPLIT‐SCREEN LOGIC ───
+  // splitscreens
   if (PERMITTED_SPLITS > 1 && detections.length > 0) {
     // how many windows to actually draw
     const count  = min(detections.length, PERMITTED_SPLITS);
@@ -129,8 +129,7 @@ function draw() {
     screenshots.push( get(0, 0, width, height) );
     lastCaptureTime = millis();
   
-    // drop oldest if we're over capacity
-    const thumbW    = 120;
+    // drop oldest if too many
     const spacing   = 10;
     const maxThumbs = floor((width - spacing) / (thumbW + spacing));
     if (screenshots.length > maxThumbs) {
