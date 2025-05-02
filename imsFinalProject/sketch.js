@@ -1,9 +1,15 @@
+// ─── new at top ───
+const urlParams       = new URLSearchParams(window.location.search);
+const PERMITTED_SPLITS = parseInt(urlParams.get('splits')) || 1;  // how many face‐windows to show
 
 const CAP_W       = 640;          
 const CAP_H       = 480;
 const LERP_FACTOR = 0.06;        //zoommspeed
 const BBOX_MARGIN = 1.4;          // 1 = exact fit, >1 = looser
 const SCAN_LINES  = 4;
+let screenshots = [];
+let lastCaptureTime = 0;
+const CAPTURE_INTERVAL = 4000; // ms
 
 let video;
 let faceMesh;
@@ -40,7 +46,17 @@ function gotResults(results, error) {
     return;
   }
   detections = results;
+  if (detections.length) {
+    // if it's the first frame with a face, reset timer
+    if (lastCaptureTime === 0) {
+      lastCaptureTime = millis();
+    }
+  } else {
+    // no faces, reset
+    lastCaptureTime = 0;
+  }
 }
+
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
@@ -49,24 +65,84 @@ function windowResized() {
 function draw() {
   background(0);
 
-  updateCameraTarget();
-  cx   = lerp(cx,   tx, LERP_FACTOR);
-  cy   = lerp(cy,   ty, LERP_FACTOR);
-  zoom = lerp(zoom, tz, LERP_FACTOR);
+  // ─── SPLIT‐SCREEN LOGIC ───
+  if (PERMITTED_SPLITS > 1 && detections.length > 0) {
+    // how many windows to actually draw
+    const count  = min(detections.length, PERMITTED_SPLITS);
+    const splitW = width / count;
+    const splitH = height;
 
-  const cover = max(width / CAP_W, height / CAP_H);
+    for (let i = 0; i < count; i++) {
+      const p = detections[i];
+      const { xMin, yMin, xMax, yMax } = p.box;
+      const boxW = xMax - xMin;
+      const boxH = yMax - yMin;
+      const midX = xMin + boxW / 2;
+      const midY = yMin + boxH / 2;
+      // compute a zoom just for this face
+      const s       = min(CAP_W / (boxW * BBOX_MARGIN),
+                          CAP_H / (boxH * BBOX_MARGIN));
+      const tzLocal = constrain(s, 1, 5);
 
-  push();
-  translate(width / 2, height / 2);
-  scale(cover * zoom);
-  translate(-cx, -cy);
-  image(video, 0, 0, CAP_W, CAP_H);
-  drawFaceBoxes();            
-  pop();
+      push();
+        // move origin to center of this split region
+        translate(i * splitW + splitW/2, splitH/2);
+        // figure out cover for this region
+        const cover = max(splitW / CAP_W, splitH / CAP_H);
+        scale(cover * tzLocal);
+        // center on our face
+        translate(-midX, -midY);
+        // draw the video and box
+        image(video, 0, 0, CAP_W, CAP_H);
+        noFill();
+        stroke(0,255,0,160);
+        strokeWeight(2 / tzLocal);
+        rect(xMin, yMin, boxW, boxH);
+      pop();
+    }
 
+  } else {
+    // ─── SINGLE‐WINDOW (original) ───
+    updateCameraTarget();
+    cx   = lerp(cx,   tx, LERP_FACTOR);
+    cy   = lerp(cy,   ty, LERP_FACTOR);
+    zoom = lerp(zoom, tz, LERP_FACTOR);
+
+    const cover = max(width / CAP_W, height / CAP_H);
+
+    push();
+      translate(width / 2, height / 2);
+      scale(cover * zoom);
+      translate(-cx, -cy);
+      image(video, 0, 0, CAP_W, CAP_H);
+      drawFaceBoxes();
+    pop();
+  }
+
+  // ─── GREEN TINT ───
   applyGreenTint();
+
+  // ─── SCREENSHOT (unchanged) ───
+  if (detections.length && millis() - lastCaptureTime > CAPTURE_INTERVAL) {
+    screenshots.push(get(0, 0, width, height));
+    lastCaptureTime = millis();
+  }
+
+  // ─── HUD + THUMBNAILS (unchanged) ───
   drawHUD();
+  const thumbW = 120;
+  const thumbH = thumbW * (CAP_H / CAP_W);
+  for (let i = 0; i < screenshots.length; i++) {
+    let x = 10 + i * (thumbW + 10);
+    let y = height - thumbH - 10;
+    image(screenshots[i], x, y, thumbW, thumbH);
+    stroke(255);
+    noFill();
+    rect(x, y, thumbW, thumbH);
+  }
 }
+
+
 
 function updateCameraTarget() {
   if (!detections.length) {
