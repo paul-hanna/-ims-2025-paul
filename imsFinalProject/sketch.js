@@ -206,7 +206,7 @@ function drawHUD() {
   noStroke();
   fill(0, 255, 0);
   const t = nf(hour(), 2) + ":" + nf(minute(), 2) + ":" + nf(second(), 2);
-  text("CAM 01  " + t, 10, height - 10);
+  text("CAM 01  " + t, 10, 20);
 
   fill(frameCount % 30 < 15 ? color(255, 0, 0) : color(0, 255, 0));
   text("REC", width - 46, 20);
