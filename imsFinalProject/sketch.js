@@ -102,7 +102,7 @@ function draw() {
     }
 
   } else {
-    // ─── SINGLE‐WINDOW (original) ───
+    // ─── SINGLE‐WINDOW───
     updateCameraTarget();
     cx   = lerp(cx,   tx, LERP_FACTOR);
     cy   = lerp(cy,   ty, LERP_FACTOR);
@@ -122,13 +122,21 @@ function draw() {
   // ─── GREEN TINT ───
   applyGreenTint();
 
-  // ─── SCREENSHOT (unchanged) ───
+  // ─── SCREENSHOT──
   if (detections.length && millis() - lastCaptureTime > CAPTURE_INTERVAL) {
-    screenshots.push(get(0, 0, width, height));
+    screenshots.push( get(0, 0, width, height) );
     lastCaptureTime = millis();
+  
+    // drop oldest if we're over capacity
+    const thumbW    = 120;
+    const spacing   = 10;
+    const maxThumbs = floor((width - spacing) / (thumbW + spacing));
+    if (screenshots.length > maxThumbs) {
+      screenshots.shift();
+    }
   }
 
-  // ─── HUD + THUMBNAILS (unchanged) ───
+  // ─── HUD + THUMBNAILS───
   drawHUD();
   const thumbW = 120;
   const thumbH = thumbW * (CAP_H / CAP_W);
@@ -200,4 +208,10 @@ function drawHUD() {
 
   fill(frameCount % 30 < 15 ? color(255, 0, 0) : color(0, 255, 0));
   text("REC", width - 46, 20);
+}
+
+function keyPressed() {
+  if (key === 'f' || key === 'F') {
+    fullscreen( !fullscreen() );
+  }
 }
