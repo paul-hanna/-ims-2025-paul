@@ -67,11 +67,10 @@ function windowResized() {
 function draw() {
   background(0);
 
-  // splitscreens
   if (PERMITTED_SPLITS > 1 && detections.length > 0) {
-    // how many windows to actually draw
+    // split-screen branch
     const count  = min(detections.length, PERMITTED_SPLITS);
-    const splitW = width / count;
+    const splitW = width  / count;
     const splitH = height;
 
     for (let i = 0; i < count; i++) {
@@ -81,20 +80,18 @@ function draw() {
       const boxH = yMax - yMin;
       const midX = xMin + boxW / 2;
       const midY = yMin + boxH / 2;
-      // compute a zoom just for this face
-      const s       = min(CAP_W / (boxW * BBOX_MARGIN),
-                          CAP_H / (boxH * BBOX_MARGIN));
+      const s    = min(CAP_W / (boxW * BBOX_MARGIN),
+                       CAP_H / (boxH * BBOX_MARGIN));
       const tzLocal = constrain(s, 1, 5);
 
       push();
-        // move origin to center of this split region
+        // center this split
         translate(i * splitW + splitW/2, splitH/2);
-        // figure out cover for this region
+        // scale to cover
         const cover = max(splitW / CAP_W, splitH / CAP_H);
         scale(cover * tzLocal);
-        // center on our face
+        // pan to face
         translate(-midX, -midY);
-        // draw the video and box
         image(video, 0, 0, CAP_W, CAP_H);
         noFill();
         stroke(0,255,0,160);
@@ -104,7 +101,7 @@ function draw() {
     }
 
   } else {
-    // singlewindow
+    // single-window branch
     updateCameraTarget();
     cx   = lerp(cx,   tx, LERP_FACTOR);
     cy   = lerp(cy,   ty, LERP_FACTOR);
@@ -121,35 +118,34 @@ function draw() {
     pop();
   }
 
-
+  // apply the green tint over the final frame
   applyGreenTint();
 
-  // screenshot
+  drawHUD();
+
+  // define thumbnail size *after* all camera drawing
+  const thumbW = 120;
+  const thumbH = thumbW * (CAP_H / CAP_W);
+
   if (detections.length && millis() - lastCaptureTime > CAPTURE_INTERVAL) {
     screenshots.push( get(0, 0, width, height) );
     lastCaptureTime = millis();
-  
-    // drop oldest if too many
+
     const spacing   = 10;
     const maxThumbs = floor((width - spacing) / (thumbW + spacing));
-    if (screenshots.length > maxThumbs) {
-      screenshots.shift();
-    }
+    if (screenshots.length > maxThumbs) screenshots.shift();
   }
 
-  // hud and thumbs
-  drawHUD();
-  const thumbW = 120;
-  const thumbH = thumbW * (CAP_H / CAP_W);
   for (let i = 0; i < screenshots.length; i++) {
-    let x = 10 + i * (thumbW + 10);
-    let y = height - thumbH - 10;
+    const x = 10 + i * (thumbW + 10);
+    const y = height - thumbH - 10;
     image(screenshots[i], x, y, thumbW, thumbH);
-    stroke(255);
     noFill();
+    stroke(255);
     rect(x, y, thumbW, thumbH);
   }
 }
+
 
 
 
